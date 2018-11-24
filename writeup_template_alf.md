@@ -1,6 +1,4 @@
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+## Advanced Lane Finding Project Writeup
 
 ---
 
@@ -19,35 +17,33 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[image1]: ./output_images/calibration1.jpg "distorted"
+[image2]: ./output_images/undistorted.jpg "undistorted"
+[image3]: ./output_images/test5.jpg "test image"
+[image4]: ./output_images/undistorted_test5.jpg "undistorted test image"
+[image5]: ./output_images/straight_lines1.jpg "before binary"
+[image6]: ./output_images/binary_image.jpg "Binary Image"
+[image7]: ./output_images/after_hough.jpg "After applying hough"
+[image8]: ./output_images/warped_image.jpg "Perspective Transform"
+[image9]: ./output_images/result.jpg "Video"
+[image10]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
----
+### All the code and functions I defined, are located in the jupyter notebook ALF.ipynb.
 
-### Writeup / README
-
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
-
-You're reading it!
 
 ### Camera Calibration
 
 #### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
 
 I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
 
 I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
+
 
 ![alt text][image1]
 
@@ -55,6 +51,9 @@ MY ANSWER:
 
 I use chessboard images from the camera_cal folder to do calibration.  The chessboard has a 9 x 6 dimension.  Firstly, I turn the image into grayscale.  Then, I use opencv's findChessboardCorners() function to find the corners for the images.  The corners are stored in the imgpoints array which I use to calibrate the camera.  From opencv's calibrateCamera function, I got the camera matrix and distortion coefficients that I can use to undistort the images.  Here I show one of the distorted image and it's corresponding undistorted image:  
 
+![before undistortion][image1]
+
+![after undistortion][image2]
 
 
 
@@ -63,11 +62,14 @@ I use chessboard images from the camera_cal folder to do calibration.  The chess
 #### 1. Provide an example of a distortion-corrected image.
 
 To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+![before undistortion][image3]
+
 
 I use the opencv's undistort() function, with the camera matrix and distortion coefficients, to undistort the images, that are from the video I need to process.
 
-Here I have one image from the test folder to show the distortion correction:
+Here I have the image from the test folder to show the distortion correction:
+![after undistortion][image4]
+
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
@@ -75,9 +77,11 @@ I used a combination of color and gradient thresholds to generate a binary image
 
 ![alt text][image3]
 
-I choose one of the image from the test folder to be the model for testing out the effectiveness of my pipeline.  In order to highlight the lanes of the road, I apply sobelx filter to the image.  It helps highlighting the vertical lines of the image.  I also change the image's color space to HLS and see the effects on each of the H, L and S channel.  The S channel highlights the lanes the best.  The respective images are shown here:
+I choose one of the image from the test folder to be the model for testing out the effectiveness of my pipeline.  In order to highlight the lanes of the road, I apply sobelx filter to the image.  It helps highlighting the vertical lines of the image.  I also change the image's color space to HLS and see the effects on each of the H, L and S channel.  The S channel highlights the lanes the best.  
 
 I combined sobelx and S channel effects to produced the binary image as follows:
+![before processing][image5]
+![binary image][image6]
 
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
@@ -111,6 +115,7 @@ I verified that my perspective transform was working as expected by drawing the 
 ![alt text][image4]
 
 In order to estimate the source points (the four points on the original image that denote the area to be tranformed) and destination points (the four points on the target image that denote the area the source points should occupy), I use some helper functions from project 1.  I hand pick the minimum and maximum y coordinates to be [435, 720]  Firstly, I use the region of interest function to show only the lane part of the image.  Then, I use hough lines function with the draw lines function, to try to show and connect the segmented lane lines.  As shown here:  
+![after hough][image7]
 
 From the draw lines function, I output some points and slopes of the lanes, so that I can calculate the source points coordinates.  Then, I hand pick the destination points coordinates.  
 
@@ -122,7 +127,7 @@ From the draw lines function, I output some points and slopes of the lanes, so t
 | 203, 719      | 280, 720      |
 
 I apply the perspective transform to the image:
-
+![warped image][image8]
 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
@@ -149,7 +154,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 I create an image to draw the green plane of road area.  I use opencv's fillPoly() to draw according to the fit points.  Then, I use the inverse perspective matrix to convert the image to the perspective of the original image as follows:
 
-
+![final result][image9]
 
 ---
 
@@ -158,8 +163,6 @@ I create an image to draw the green plane of road area.  I use opencv's fillPoly
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
 Here's a [link to my video result](./project_video.mp4)
-
-
 
 
 ---
