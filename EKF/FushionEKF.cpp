@@ -37,9 +37,7 @@ FusionEKF::FusionEKF() {
    * TODO: Set the process and measurement noises
    */
   
-  
-
-  ekf_.F_ = VectorXd(4, 4);
+  ekf_.F_ = MatrixXd(4, 4);
   ekf_.F_ << 1, 0, 0, 0,
          0, 1, 0, 0,
          0, 0, 1, 0,
@@ -62,8 +60,12 @@ FusionEKF::FusionEKF() {
   
   Hj_ << 0, 0, 0, 0,
          0, 0, 0, 0,
-         0, 0, 0, 0;
+       0, 0, 0, 0;
   
+  ekf_.x_ = VectorXd(4);
+  ekf_.x_ << 0, 0, 0, 0;
+}
+/**
  * Destructor.
  */
 FusionEKF::~FusionEKF() {}
@@ -92,7 +94,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         double rho = measurement_pack.raw_measurements_(0);
         double phi = measurement_pack.raw_measurements_(1);
         double rhodot = measurement_pack.raw_measurements_(2);
-      
+        // convert to cartesian coordinates
         double px = rho * cos(phi);
         double py = rho * sin(phi);
         double vx = rhodot * cos(phi);
@@ -105,7 +107,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       // TODO: Initialize state.
     double px = measurement_pack.raw_measurements_(0);
         double py = measurement_pack.raw_measurements_(1);
-      
+        // set x
         ekf_.x_ << px, py, 0, 0;
     }
 
@@ -124,19 +126,20 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    * TODO: Update the process noise covariance matrix.
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+    // given
     double noise_ax = 9.0;
     double noise_ay = 9.0;
-    
+    // time changes
     double dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
-    previous_timestamp_ = measurement_pack.timestamp;
-  
+    previous_timestamp_ = measurement_pack.timestamp_;
+    // update F matrix
     ekf_.F_(0, 2) = dt;
     ekf_.F_(1, 3) = dt;
-  
+    // preparation for calculating Q matrix 
     double dt_pow_2 = dt * dt;
     double dt_pow_3 = dt_pow_2 * dt;
     double dt_pow_4 = dt_pow_3 * dt;
-  
+    // calculation of Q matrix
     ekf_.Q_ << dt_pow_4 / 4 * noise_ax, 0, dt_pow_3 / 2 * noise_ax, 0,
           0, dt_pow_4 / 4 * noise_ay, 0, dt_pow_3 / 2 * noise_ay,
           dt_pow_3 / 2 * noise_ax, 0, dt_pow_2 * noise_ax, 0,
