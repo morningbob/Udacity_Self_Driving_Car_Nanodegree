@@ -59,8 +59,8 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   MatrixXd Hj(3, 4);
   // preparation to calculate the matrix
   double c1 = px * px + py * py;
-  if (std::abs(c1) < 0.00001) {
-  c1 = 0.00001;
+  if (std::abs(c1) < 0.0000001) {
+  c1 = 0.0000001;
   }
   double c2 = sqrt(c1);
   double c3 = c1 * c2;
@@ -68,10 +68,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   // calculate jacobian matrix
   Hj << (px / c2), (py / c2), 0, 0,
     -(py / c1), (px / c1), 0, 0,
-    py * (vx*py - vy*px) / c3, px * (vy*px - vx*py) / c3, px / c2, py / c2;
+    (py * (vx*py - vy*px)) / c3, (px * (vy*px - vx*py))/ c3, px / c2, py / c2;
        
   return Hj;
-  
-  
-  
 }

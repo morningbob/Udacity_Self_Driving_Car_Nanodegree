@@ -65,22 +65,20 @@ void KalmanFilter::UpdateEKF(const VectorXd &z, KalmanFilter ekf_) {
   
     // approximate corresponding rho, phi, rhodot
     float rho = sqrt(px * px + py * py);
-    if (rho < 0.0001) {
-      rho = 0.0001;
+    if (rho < 0.000001) {
+      return;
     }
   
     float phi = atan2(py, px);
     float rhodot = (px * vx + py * vy) / rho;
-    //float rhodot;
-    
-    
+        
     VectorXd h = VectorXd(3);
     h << rho, phi, rhodot;
   
     VectorXd y = z - h;
     // normalize phi in y
-    while (y(1) > M_PI) y(1) -= 2*M_PI;
-    while (y(1) < -M_PI) y(1) += 2*M_PI;
+    while (y(1) > M_PI) y(1) -= M_PI;
+    while (y(1) < -M_PI) y(1) += M_PI;
       
     
     // continue to do kalman filter

@@ -43,17 +43,8 @@ FusionEKF::FusionEKF() {
          0, 0, 1, 0,
          0, 0, 0, 1;
   
-  ekf_.P_ = MatrixXd(4, 4);
-  ekf_.P_ << 1, 0, 0, 0,
-         0, 1, 0, 0,
-         0, 0, 1, 0,
-         0, 0, 0, 1;
-  
   ekf_.Q_ = MatrixXd(4, 4);
-  ekf_.Q_ << 0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0;
+ 
   
   H_laser_ << 1, 0, 0, 0,
           0, 1, 0, 0;
@@ -61,9 +52,6 @@ FusionEKF::FusionEKF() {
   Hj_ << 0, 0, 0, 0,
          0, 0, 0, 0,
        0, 0, 0, 0;
-  
-  ekf_.x_ = VectorXd(4);
-  ekf_.x_ << 1, 1, 1, 1;
 }
 /**
  * Destructor.
@@ -83,8 +71,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     // first measurement
     cout << "EKF: " << endl;
-    //ekf_.x_ = VectorXd(4);
-    //ekf_.x_ << 1, 1, 1, 1;
+    ekf_.x_ = VectorXd(4);
+    ekf_.x_ << 1, 1, 1, 1;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
@@ -99,7 +87,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         float py = rho * sin(phi);
         float vx = rhodot * cos(phi);
         float vy = rhodot * sin(phi);
-
+    
         // set x
         ekf_.x_ << px, py, vx, vy;
     }
@@ -109,13 +97,20 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         float py = measurement_pack.raw_measurements_(1);
         // set x
         ekf_.x_ << px, py, 0, 0;
+      
     }
-
+  ekf_.P_ = MatrixXd(4, 4);
+    ekf_.P_ <<  1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1;
     // done initializing, no need to predict or update
+    // update time
+    previous_timestamp_ = measurement_pack.timestamp_;
     is_initialized_ = true;
     return;
   }
-
+  
   /**
    * Prediction
    */
@@ -176,7 +171,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.H_ = H_laser_;
     ekf_.Update(measurement_pack.raw_measurements_);
   }
-
+  
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
   cout << "P_ = " << ekf_.P_ << endl;
